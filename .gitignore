@@ -1,0 +1,9 @@
+# salida de Hugo
+public/
+resources/
+.hugo_build.lock
+
+# SQLite vive solo en build: ni la base ni lo que genera se versionan
+build/
+static/search.json
+data/tags.json

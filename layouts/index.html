@@ -1,0 +1,31 @@
+{{ define "main" }}
+<h1>{{ site.Title }}</h1>
+{{ .Content }}
+
+<h2>Buscar</h2>
+<form role="search" onsubmit="return false">
+  <label for="q">Busca en título, etiquetas y texto</label>
+  <input id="q" type="search" autocomplete="off" placeholder="sqlite, mdn, hugo…">
+</form>
+<ul id="results" class="posts" aria-live="polite"
+    data-index="{{ "search.json" | relURL }}"
+    data-base="{{ "" | relURL }}"></ul>
+
+<h2>Etiquetas <span class="meta">(agregadas con SQL en build)</span></h2>
+<p>
+  {{ range hugo.Data.tags }}
+  <a class="tag" href="{{ printf "tags/%s/" (.tag | urlize) | relURL }}">{{ .tag }} <b>{{ .total }}</b></a>
+  {{ else }}
+  <span class="meta">Sin datos: ejecuta <code>make index</code>.</span>
+  {{ end }}
+</p>
+
+<h2>Últimos posts</h2>
+<ul class="posts">
+  {{ range first 5 (where site.RegularPages "Section" "posts").ByDate.Reverse }}
+  <li><a href="{{ .RelPermalink }}">{{ .Title }}</a> <span class="meta">{{ .Date.Format "2006-01-02" }}</span></li>
+  {{ end }}
+</ul>
+
+<script src="{{ "search.js" | relURL }}" defer></script>
+{{ end }}
