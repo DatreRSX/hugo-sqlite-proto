@@ -9,10 +9,10 @@ Continuación de la práctica
 ## Idea (Unix: cada pieza hace una cosa, se unen con ficheros)
 
 ```
-content/*.md ──► tools/index.py ──► build/site.db ──┬─► static/search.json ─► navegador (search.js)
- (Markdown)      (parsea + INSERT)   (SQLite, local) └─► data/tags.json ────► Hugo (layouts/index.html)
+content/*.md --> tools/index.py --> build/site.db --+--> static/search.json --> navegador (search.js)
+ (Markdown)       (parsea + INSERT)   (SQLite, local) +--> data/tags.json -----> Hugo (layouts/index.html)
 
-                                    hugo ──► public/   ← lo único que se despliega
+                                     hugo --> public/   <- lo único que se despliega
 ```
 
 `build/`, `static/search.json` y `data/tags.json` están en `.gitignore`: se **regeneran** en cada build.
