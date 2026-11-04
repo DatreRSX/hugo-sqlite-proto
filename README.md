@@ -109,13 +109,11 @@ No hace falta sFTP ni capturas: con la invitación aceptada, el profesor ya pued
 
 ## Convención en vivo vs. online, con matiz de `git log`
 
-Esta práctica se entrega vía repositorio GitHub, así que aplica la misma comprobación objetiva que en
-IAW P1.1/P1.2 (`.claude/CLAUDE.md`):
-
-- **10/10** — demo en vivo **y** `git log` con trabajo real incremental (varios commits, marcas de
-  tiempo realmente separadas, mensajes no genéricos).
+Esta práctica se entrega vía repositorio GitHub: 
+- **10/10** — demo en vivo (en el aula) **y** `git log` con trabajo real incremental (varios commits, marcas de
+  tiempo realmente separadas, mensajes no genéricos. Es decir, decriptivos de los cambios realizados!).
 - **Intermedio (hasta 9/10)** — sin demo en vivo, pero con esa misma evidencia en el `git log`.
-- **Tope 8/10** — sin demo en vivo y sin evidencia en el `git log` (un commit, mensajes genéricos o
+- **Tope 7/10** — sin demo en vivo y sin evidencia en el `git log` (un commit, mensajes genéricos o
   timestamps agrupados).
 
 ## Escala orientativa
