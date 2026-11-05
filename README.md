@@ -32,10 +32,12 @@ content/*.md --> tools/index.py --> build/site.db --+--> static/search.json --> 
 ## Uso
 
 ```bash
+make            # == make help
 make serve    # índice + servidor local en http://localhost:1313/
 make build    # índice + hugo --gc --minify  → public/
 make check    # valida que los JSON generados son JSON válido
 make clean
+make check-invites   # [profesor] invitaciones de colaborador pendientes (gh CLI)
 ```
 
 ## Estructura
