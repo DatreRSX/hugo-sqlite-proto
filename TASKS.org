@@ -1,0 +1,32 @@
+#+TITLE: Hugo-SQLite search index Project Tasks
+#+AUTHOR: Fenix
+#+DATE: 2026-03-19
+
+#+TODO: TODO DOING | DONE DEPRECATED
+#+STARTUP: overview
+#+STARTUP: inline-images
+
+* TODO [Another task]
+:PROPERTIES:
+:CREATED: [2026-03-19]
+:END:
+
+* Completed
+
+** DONE add the 'Fork me on Github' ribbon
+CLOSED: [2026-11-05]
+:PROPERTIES:
+:CREATED: [2026-11-05]
+:END:
+- Context: fork invitation to the students using this repo, the KISS way
+- Acceptance criteria: ribbon shows up on the GH Pages website
+- Implementation: ribbon markup in layouts/_default/baseof.html (right after <body>),
+  positioning/responsive sizing in static/style.css (.fork-ribbon), linking to
+  https://github.com/fp-bits/hugo-sqlite-proto (from `git remote -v`)
+
+** DONE [Example completed task]
+CLOSED: [2026-03-19]
+:PROPERTIES:
+:CREATED: [2026-03-19]
+:END:
+
