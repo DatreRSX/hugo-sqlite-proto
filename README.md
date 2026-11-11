@@ -145,3 +145,18 @@ git log --format='%h %ad %s' --date=iso | head -20
 ```
 
 "Recuerda ... KISS!" :-)
+
+---
+
+## Memoria de resolución de la práctica
+
+### Comprensión del flujo de construcción (Unix Pipeline)
+1. **Entrada (`content/**/*.md`):** Los artículos se escriben en Markdown con metadatos en front matter YAML simple.
+2. **Indexación y agregación (`tools/index.py` → `build/site.db`):** En tiempo de build, Python parsea los ficheros mediante funciones puras (`split_front_matter`, `parse_meta`, `plain`, `count_words`) y vuelca la información en una base de datos relacional efímera en SQLite (`posts`, `tags` y `words`).
+3. **Exportación declarativa SQL → JSON:** Usando la extensión `JSON1` de SQLite (`json_object`, `json_group_array`) y funciones de agregación (`COUNT`, `SUM`, `AVG`, `GROUP BY`), SQLite genera directamente `static/search.json`, `data/tags.json` y `data/words.json`.
+4. **Generación estática (`hugo` → `public/`):** Hugo consume `data/tags.json` (en la portada) y `data/words.json` (en el partial del footer) para renderizar el HTML final, y copia `static/search.json` para que `static/search.js` resuelva búsquedas en el navegador del cliente sin necesitar base de datos ni backend en producción.
+
+### Ejercicios resueltos y aportaciones propias
+- **Ejercicio 1 (Nuevo post con tag `sql`):** Se ha creado `content/posts/consultas-json-sqlite.md` con las etiquetas `[sql, hugo, unix]`, verificando la actualización automática de `data/tags.json` en la página principal.
+- **Ejercicio 2 (Soporte `--drafts`):** `hugo server -D` renderiza los borradores en HTML, pero el buscador no los encontraba porque `read_all()` en `tools/index.py` filtraba con `if not page["draft"]`, impidiendo que llegaran a SQLite y a `static/search.json`. Se ha parametrizado `read_all(include_drafts=False)` leyendo el flag `--drafts` desde `sys.argv`, y se ha añadido el objetivo `make serve-drafts` en el `Makefile`.
+- **Ejercicio 3 + Aportación propia (Tabla `words(url, n)` y estadísticas en el pie):** Se ha creado la función pura `count_words(text)` y la tabla `words(url, n)` en SQLite. Mediante la consulta `Q_WORDS` se exporta a `data/words.json` no solo la suma total de palabras (`SUM(n)`), sino también el conteo de artículos y la media de palabras por post (`ROUND(AVG(n))`), mostrándolo dinámicamente en `layouts/partials/footer.html` y validándolo en `make check`.
