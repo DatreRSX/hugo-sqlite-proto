@@ -2,10 +2,11 @@
 """tools/index.py — content/**/*.md → SQLite (solo en build) → JSON estático.
 
 Filosofía Unix: hace UNA cosa. Lee Markdown, rellena build/site.db y la
-consulta con SQL para exportar dos ficheros:
+consulta con SQL para exportar tres ficheros:
 
   static/search.json  → lo consume static/search.js en el navegador
   data/tags.json      → lo consume Hugo en layouts/index.html
+  data/words.json     → lo consume Hugo en layouts/partials/footer.html
 
 La base de datos NO se despliega: public/ contiene solo ficheros estáticos.
 
@@ -29,6 +30,7 @@ CONTENT = Path("content")
 DB = Path("build/site.db")
 OUT_SEARCH = Path("static/search.json")
 OUT_TAGS = Path("data/tags.json")
+OUT_WORDS = Path("data/words.json")
 
 SCHEMA = """
 CREATE TABLE posts (
@@ -42,6 +44,10 @@ CREATE TABLE tags (
   url TEXT NOT NULL REFERENCES posts(url),
   tag TEXT NOT NULL,
   PRIMARY KEY (url, tag)
+);
+CREATE TABLE words (
+  url TEXT PRIMARY KEY REFERENCES posts(url),
+  n   INTEGER NOT NULL DEFAULT 0
 );
 """
 
@@ -64,6 +70,15 @@ SELECT json_group_array(json_object('tag', tag, 'total', total))
 FROM (
   SELECT tag, COUNT(*) AS total FROM tags GROUP BY tag ORDER BY total DESC, tag
 )
+"""
+
+# Agregación: total de palabras, número de posts y media por post (Ej. 3 + extra).
+Q_WORDS = """
+SELECT json_object(
+  'total', COALESCE(SUM(n), 0),
+  'posts', COUNT(*),
+  'avg', COALESCE(CAST(ROUND(AVG(n)) AS INTEGER), 0)
+) FROM words
 """
 
 # --- funciones puras ---------------------------------------------------------
@@ -91,18 +106,22 @@ def parse_meta(block):
 
 # (patrón, reemplazo) aplicados en orden: Markdown → texto plano
 CLEANERS = [
-    (r"```.*?```", " "),                              # bloques de código
-    (r"`([^`]*)`", r"\1"),                            # código en línea
-    (r"!?\[([^\]]*)\]\([^)]*\)", r"\1"),              # enlaces/imágenes → texto
+    (r"```.*?```", " "),                                  # bloques de código
+    (r"`([^`]*)`", r"\1"),                                # código en línea
+    (r"!?\[([^\]]*)\]\([^)]*\)", r"\1"),                  # enlaces/imágenes → texto
     (r"^[ \t]{0,3}(?:#{1,6}|>|[-*+]|\d+\.)[ \t]+", ""),  # marcas de bloque
-    (r"\*{1,3}", ""),                                 # énfasis
-    (r"\s+", " "),                                    # espacios
+    (r"\*{1,3}", ""),                                     # énfasis
+    (r"\s+", " "),                                        # espacios
 ]
 
 
 def plain(markdown):
     step = lambda s, pr: re.sub(pr[0], pr[1], s, flags=re.S | re.M)
     return reduce(step, CLEANERS, markdown).strip()
+
+
+def count_words(text):
+    return len(text.split())
 
 
 def shorten(text, n=160):
@@ -129,12 +148,14 @@ def read_page(path):
         "tags": tags if isinstance(tags, list) else [tags],
         "draft": meta.get("draft", False) is True,
         "text": text,
+        "words": count_words(text),
     }
 
 
-def read_all():
+def read_all(include_drafts=False):
     files = (p for p in sorted(CONTENT.rglob("*.md")) if p.name != "_index.md")
-    return [page for page in map(read_page, files) if not page["draft"]]
+    return [page for page in map(read_page, files)
+            if include_drafts or not page["draft"]]
 
 
 # --- efectos: disco y SQL ----------------------------------------------------
@@ -150,6 +171,8 @@ def build_db(pages):
     con.executemany(
         "INSERT OR IGNORE INTO tags(url, tag) VALUES (?, ?)",
         [(p["url"], t) for p in pages for t in p["tags"]])
+    con.executemany(
+        "INSERT INTO words(url, n) VALUES (:url, :words)", pages)
     con.commit()
     return con
 
@@ -159,15 +182,17 @@ def export(con, query, out):
     out.write_text(con.execute(query).fetchone()[0] + "\n", encoding="utf-8")
 
 
-def main():
+def main(argv=sys.argv[1:]):
     if not CONTENT.is_dir():
         sys.exit("index.py: ejecútalo desde la raíz del repo (make index)")
-    pages = read_all()
+    include_drafts = "--drafts" in argv
+    pages = read_all(include_drafts=include_drafts)
     con = build_db(pages)
     export(con, Q_SEARCH, OUT_SEARCH)
     export(con, Q_TAGS, OUT_TAGS)
+    export(con, Q_WORDS, OUT_WORDS)
     con.close()
-    print(f"index: {len(pages)} páginas → {OUT_SEARCH}, {OUT_TAGS}")
+    print(f"index: {len(pages)} páginas → {OUT_SEARCH}, {OUT_TAGS}, {OUT_WORDS}")
 
 
 if __name__ == "__main__":
